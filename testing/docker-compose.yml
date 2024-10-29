@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  ollama:
+    build: .
+    container_name: mastermind
+    image: ollama/ollama
+    pull_policy: always
+    healthcheck:
+      test: ollama ps || exit 1
+      interval: 10s
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    environment:
+      - OLLAMA_KEEP_ALIVE=5m
+    volumes:
+      - ./ollama:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
