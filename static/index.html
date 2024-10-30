@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        input[type="file"] {
+            margin: 20px;
+        }
+        #recipe {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            display: none; /* Initially hidden */
+        }
+    </style>
+</head>
+<body>
+    <h1>Food Recipe Generator</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" id="fileInput" name="file" accept="image/*" required>
+        <button type="submit">Generate Recipe</button>
+    </form>
+
+    <div id="recipe"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('fileInput');
+            formData.append('file', fileInput.files[0]);
+
+            const response = await fetch('/generate_recipe', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+            const recipeDiv = document.getElementById('recipe');
+
+            if (response.ok) {
+                recipeDiv.innerHTML = data.recipe; // Display the recipe HTML
+                recipeDiv.style.display = 'block'; // Show the recipe div
+            } else {
+                recipeDiv.innerHTML = `<p style="color:red;">Error: ${data.message}</p>`;
+                recipeDiv.style.display = 'block'; // Show error message
+            }
+        });
+    </script>
+</body>
+</html>
