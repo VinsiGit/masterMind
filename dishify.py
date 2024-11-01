@@ -10,6 +10,8 @@ class FoodImageClassifier:
     CONFIDENCE_THRESHOLD = 0.5
 
     def __init__(self, model_name='llama3.2:1b'):
+        ollama.pull('llama3.2:1b')
+
         self.model_name = model_name
 
         self.category_processor = AutoImageProcessor.from_pretrained("Kaludi/food-category-classification-v2.0")
