@@ -1,7 +1,6 @@
 services:
   ollama:
-    build: testing
-    container_name: mastermind
+    container_name: dishify-ollama
     image: ollama/ollama
     pull_policy: always
     healthcheck:
@@ -14,6 +13,8 @@ services:
       - OLLAMA_KEEP_ALIVE=5m
     volumes:
       - ./ollama:/root/.ollama
+    networks:
+      - connection
     deploy:
       resources:
         reservations:
@@ -21,3 +22,39 @@ services:
             - driver: nvidia
               count: all
               capabilities: [ gpu ]
+
+  frontend:
+    image: nginx:latest
+    container_name: dishify-frontend
+    volumes:
+      - "./static:/usr/share/nginx/html:ro"
+    networks:
+      - proxy
+    labels:
+      - "traefik.http.routers.dishify-frontend.entrypoints=websecure"
+      - "traefik.http.routers.dishify-frontend.rule=Host(`${WEBSITE_URL}`) && !PathPrefix(`/api`)"
+      - "traefik.http.routers.dishify-frontend.tls=true"
+      - "traefik.http.routers.dishify-frontend.tls.certresolver=letsencrypt"
+
+  api:
+    container_name: dishify-api
+    build:
+      context: .
+      dockerfile: api.Dockerfile
+    networks:
+      - proxy
+      - connection
+    labels:
+      - "traefik.http.routers.dishify-api.entrypoints=websecure"
+      - "traefik.http.routers.dishify-api.rule=Host(`${WEBSITE_URL}`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.dishify-api.tls=true"
+      - "traefik.http.routers.dishify-api.tls.certresolver=letsencrypt"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+
+networks:
+  proxy:
+    external: true
+    name: traefik
+  connection:
+    driver: bridge

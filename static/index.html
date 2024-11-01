@@ -4,31 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recipe Generator</title>
+    <!-- Include Bulma CSS from CDN -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"
+    >
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-        }
-        input[type="file"] {
-            margin: 20px;
+            padding: 50px; /* Padding around the body */
         }
         #recipe {
             margin-top: 20px;
-            border: 1px solid #ccc;
-            padding: 10px;
+            border: 1px solid #ccc; /* Border for recipe display */
+            padding: 10px; /* Padding inside the recipe display */
             display: none; /* Initially hidden */
         }
     </style>
 </head>
 <body>
-    <h1>Food Recipe Generator</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <input type="file" id="fileInput" name="file" accept="image/*" required>
-        <button type="submit">Generate Recipe</button>
-    </form>
+    <div class="container">
+        <h1 class="title">Food Recipe Generator</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="field">
+                <label class="label" for="fileInput">Upload an Image</label>
+                <div class="control">
+                    <input type="file" id="fileInput" name="file" accept="image/*" required class="input">
+                </div>
+            </div>
+            <div class="control">
+                <button type="submit" class="button is-primary">Generate Recipe</button>
+            </div>
+        </form>
 
-    <div id="recipe"></div>
+        <div id="recipe" class="box"></div> <!-- Bulma box for recipe display -->
+    </div>
 
     <script>
         document.getElementById('uploadForm').addEventListener('submit', async (event) => {
@@ -37,7 +46,7 @@
             const fileInput = document.getElementById('fileInput');
             formData.append('file', fileInput.files[0]);
 
-            const response = await fetch('/generate_recipe', {
+            const response = await fetch('/api/generate_recipe', {
                 method: 'POST',
                 body: formData,
             });
@@ -49,7 +58,7 @@
                 recipeDiv.innerHTML = data.recipe; // Display the recipe HTML
                 recipeDiv.style.display = 'block'; // Show the recipe div
             } else {
-                recipeDiv.innerHTML = `<p style="color:red;">Error: ${data.message}</p>`;
+                recipeDiv.innerHTML = `<p class="has-text-danger">Error: ${data.message}</p>`; // Error message styled with Bulma
                 recipeDiv.style.display = 'block'; // Show error message
             }
         });
