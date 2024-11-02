@@ -1,11 +1,11 @@
 import torch
-import requests
 import logging
 from transformers import AutoModelForImageClassification, AutoImageProcessor
 from torchvision import transforms
 from PIL import Image
 from ollama import Client  # Import Client for Ollama interaction
 import markdown2
+from typing import Optional
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -118,21 +118,21 @@ class FoodImageClassifier:
 
         return results
 
-    def generate_recipe(self, classified_items: list[tuple]) -> str:
-        """Generates a recipe using classified ingredients."""
+    def generate_recipe(self, classified_items: list[tuple], instructions: Optional[str] = None) -> str:
+        """Generates a recipe using classified ingredients and optional user instructions."""
         ingredients = [item if item else category for category, item in classified_items]
         ingredient_list = ", ".join(ingredients)
 
-        # Use Ollama Client to generate a recipe
+        # Construct the prompt with user-provided instructions
+        prompt = f"Create a unique recipe using the following ingredients: {ingredient_list}."
+        if instructions:
+            prompt += f" Please also consider the following: {instructions}"
+
         try:
             response = self.ollama_client.chat(model=self.model_name, messages=[
-                {
-                    'role': 'user',
-                    'content':  f"""Create a unique recipe using the following ingredients, The ingredients: {ingredient_list}."""
-                },
+                {'role': 'user', 'content': prompt},
             ])
 
-            # Extract message content and convert to HTML if response is successful
             if response and 'message' in response:
                 markdown_content = response['message']['content']
                 html_content = markdown2.markdown(markdown_content).replace('\n\n', '<br>')

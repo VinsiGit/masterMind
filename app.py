@@ -1,5 +1,6 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import JSONResponse
+from typing import List, Optional
 from PIL import Image
 import io
 from dishify import FoodImageClassifier
@@ -7,34 +8,33 @@ from dishify import FoodImageClassifier
 app = FastAPI()
 classifier = FoodImageClassifier()
 
-
-def load_image(file: UploadFile) -> Image.Image:
-    """
-    Helper function to load an image from an uploaded file and save it to a directory called 'debug'.
-    """
-    # Load the image
-    image = Image.open(io.BytesIO(file.file.read()))
-
-    return image
+def load_images(files: List[UploadFile]) -> List[Image.Image]:
+    """Load multiple images from uploaded files."""
+    images = []
+    for file in files:
+        image = Image.open(io.BytesIO(file.file.read()))
+        images.append(image)
+    return images
 
 @app.post("/api/generate_recipe")
-async def generate_recipe(file: UploadFile = File(...)):
+async def generate_recipe(files: List[UploadFile] = File(...), text: Optional[str] = Form(None)):
     """
-    Endpoint to upload an image and generate a recipe based on the classified items.
+    Endpoint to upload multiple images and generate a recipe based on the classified items.
 
     Parameters:
-    - file: Image file to classify and generate a recipe from
+    - files: List of image files to classify and generate a recipe from
+    - text: Additional text for preferences or dietary restrictions
 
     Returns:
     - A JSON response containing the generated recipe.
     """
-    # Load the uploaded image
-    image = load_image(file)
+    # Load the uploaded images
+    images = load_images(files)
 
-    # Classify the image
-    classified_items = classifier.classify_images([image])
+    # Classify each image
+    classified_items = classifier.classify_images(images)
 
-    # Generate the recipe based on classified items
-    recipe = classifier.generate_recipe(classified_items)
+    # Generate the recipe based on classified items and additional text
+    recipe = classifier.generate_recipe(classified_items, text)
 
     return JSONResponse(content={"recipe": recipe})

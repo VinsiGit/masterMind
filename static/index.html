@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recipe Generator</title>
+    <title>Food Recipe Generator</title>
     <!-- Include Bulma CSS from CDN -->
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css"
-    >
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
     <style>
         body {
-            padding: 50px; /* Padding around the body */
+            padding: 50px;
         }
         #recipe {
-            margin-top: 20px;
-            border: 1px solid #ccc; /* Border for recipe display */
-            padding: 10px; /* Padding inside the recipe display */
-            display: none; /* Initially hidden */
+            margin: 20px auto; /* Increased margin for more space from the top */
+            padding: 40px; /* Adds padding inside the div */
+            border: 1px solid #ccc;
+            border-radius: 8px; /* Rounded corners for a cleaner look */
+            background-color: #f9f9f9; /* Light background color */
+            display: none; /* Hidden by default until recipe is generated */
         }
     </style>
 </head>
@@ -26,9 +25,15 @@
         <h1 class="title">Food Recipe Generator</h1>
         <form id="uploadForm" enctype="multipart/form-data">
             <div class="field">
-                <label class="label" for="fileInput">Upload an Image</label>
+                <label class="label" for="fileInput">Upload Images</label>
                 <div class="control">
-                    <input type="file" id="fileInput" name="file" accept="image/*" required class="input">
+                    <input type="file" id="fileInput" name="files" accept="image/*" multiple required class="input">
+                </div>
+            </div>
+            <div class="field">
+                <label class="label" for="textInput">Additional Instructions</label>
+                <div class="control">
+                    <textarea id="textInput" name="text" placeholder="Add any preferences, dietary restrictions, etc." class="textarea"></textarea>
                 </div>
             </div>
             <div class="control">
@@ -36,7 +41,8 @@
             </div>
         </form>
 
-        <div id="recipe" class="box"></div> <!-- Bulma box for recipe display -->
+        <!-- Recipe Output Container -->
+        <div id="recipe" class="box"></div>
     </div>
 
     <script>
@@ -44,8 +50,17 @@
             event.preventDefault();
             const formData = new FormData();
             const fileInput = document.getElementById('fileInput');
-            formData.append('file', fileInput.files[0]);
+            const textInput = document.getElementById('textInput').value;
 
+            // Append each file to formData
+            for (const file of fileInput.files) {
+                formData.append('files', file);
+            }
+
+            // Append text input to formData
+            formData.append('text', textInput);
+
+            // Send data to server
             const response = await fetch('/api/generate_recipe', {
                 method: 'POST',
                 body: formData,
@@ -54,12 +69,13 @@
             const data = await response.json();
             const recipeDiv = document.getElementById('recipe');
 
+            // Display the generated recipe or error message
             if (response.ok) {
-                recipeDiv.innerHTML = data.recipe; // Display the recipe HTML
-                recipeDiv.style.display = 'block'; // Show the recipe div
+                recipeDiv.innerHTML = data.recipe;
+                recipeDiv.style.display = 'block';
             } else {
-                recipeDiv.innerHTML = `<p class="has-text-danger">Error: ${data.message}</p>`; // Error message styled with Bulma
-                recipeDiv.style.display = 'block'; // Show error message
+                recipeDiv.innerHTML = `<p class="has-text-danger">Error: ${data.message}</p>`;
+                recipeDiv.style.display = 'block';
             }
         });
     </script>
